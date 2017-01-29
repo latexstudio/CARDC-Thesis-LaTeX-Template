@@ -1,0 +1,51 @@
+﻿\chapter{模板介绍}
+\section{包含的主要文件}
+\begin{itemize}
+\itemsep=0pt \parskip=0pt
+\item \textbf{main.tex：}位于根目录下，是本模板的主要文件。
+\item \textbf{bib文件夹：}包含的是参考文献的bib数据库。%
+\item \textbf{CARDCDef文件夹：}是本模板的格式设置文件，其中CARDC.cls是
+本模板格式的主要设置文件，CARDCTitlePage.sty文件定义了本模板的中英文扉
+页和版权声明页，YYBib.sty文件定义了参考文献格式。一般情况下，这三个文件请勿修改。
+\item \textbf{chapter文件夹：}是本模板章节内容放置处。
+\item \textbf{pic文件夹：}放置了本模板用的图片。
+\item \textbf{Script文件夹：}编译调用的脚本文件。
+\end{itemize}
+
+\subsection{main.tex文件}
+您毕业论文的各项信息请根据注释部分的提示填写即可。
+
+\subsection{ref.bib文件}
+在bib文件夹下的ref.bib文件是本模板使用的参考文献数据库。该数据类型可以%
+使用其他文献管理软件生成，见本模板附带的图文说明文档《第一次使用LaTeX？读我》。%
+
+\subsection{MyDef.sty文件}
+如果您在使用该模板的过程中，需要用到该模板没有导入的宏包或者增加自定义命令，%
+可以在导言区增加，或者在CARDCDef文件夹下的MyDef.sty文件中添加，\textbf{本人推荐您%
+在MyDef.sty文件中添加，方便统一管理。}
+
+\subsection{Compile.bat}
+Windows下的批处理文件，实现一键编译，在文件里面可以切换参考文献后台处理程序，%
+如果使用切换至Biber，\textbf{请以管理员权限运行该脚本}。
+
+\subsection{Clean.bat}
+Windows下清理临时文件的批处理文件。
+
+\subsection{Makefile}
+在Linux环境下（Linux系统或者Cygwin环境），可以使用make工具编译。
+
+\subsection{章节内容}
+章节内容包含在chapter文件夹中，已有的是
+\begin{itemize}
+\itemsep=0pt \parskip=0pt
+\item \textbf{abstract.tex：}是中英文摘要。
+\item \textbf{appendix.tex：}是附录内容，如果没有附录内容，在main.tex中将该部分%
+    导入注释掉。%
+\item \textbf{thanks.tex：}是致谢部分。
+\item \textbf{1.tex，2.tex：}是本说明文档的第一、二章内容。
+\end{itemize}
+
+如果您增加新的章节，请使用UTF-8编码格式，并在main.tex中使用include命令导入即可。%
+关于如何将编码格式转为UTF-8，见本模板附带的图文说明文档《第一次使用LaTeX？读我》。%
+本人推荐您直接复制chapter目录下的.tex文件，改为需要的名字并导入，然后在里头直接%
+书写内容即可。

@@ -1,0 +1,99 @@
+﻿% !Mode:: "TeX:UTF-8"
+\documentclass[twoside]{CARDCDef/CARDC}%使用Biber处理参考文献
+%\documentclass[twoside,Biber]{CARDCDef/CARDC}%使用Biber处理参考文献
+
+\usepackage{CARDCDef/MyDef}
+
+\makeatletter
+
+%封面大标题
+%若自动换行处导致分割词义，可使用\newline命令手动换行，勿使用命令\\换行
+\renewcommand{\CARDC@ArtTitle}{中国空气动力研究与发展中心硕博论文模板}
+%封面大标题
+%若自动换行处导致分割词义，可使用\newline命令手动换行，勿使用命令\\换行
+\renewcommand{\CARDC@ArtBigTitle}{中国空气动力研究与发展中心硕博\newline 论文模板}
+%封面日期
+\renewcommand{\CARDC@ArtSubmitDate}{二零一六年六月}
+%导师名字
+\renewcommand{\CARDC@FirstTutorName}{梅长苏}
+%导师职称
+\renewcommand{\CARDC@FirstTutorPost}{宗\hspace{1em}主}
+%是否有副导师，有为字母：Y，没有为字母：N
+\renewcommand{\CARDC@WithTwoTutor}{Y}
+%副导师名字
+\renewcommand{\CARDC@SecondTutorName}{飞\hspace{1em}流}
+%副导师职称
+\renewcommand{\CARDC@SecondTutorPost}{副宗主}
+%密级
+\renewcommand{\CARDC@SecretLevel}{公开}
+%学生名字
+\renewcommand{\CARDC@StudentName}{张\hspace{1em}三}
+%学号
+\renewcommand{\CARDC@StudentID}{}
+%专业
+\renewcommand{\CARDC@StudentMajor}{武林纷争研究}
+%研究方向
+\renewcommand{\CARDC@ResearchDirection}{琅琊榜排名}
+%硕士还是博士，硕士写上：硕，博士写上：博
+\renewcommand{\CARDC@MasterOrDoctor}{博}
+
+%文章大标题英文英文
+%若自动换行导致句子不美观，可使用\newline命令手动换行，勿使用命令\\换行
+\renewcommand{\CARDC@ArtBigTitleEN}
+{Thesis Template for China Aerodynamics Research and Development Center}
+%文章的提交日期英文
+\renewcommand{\CARDC@ArtSubmitDateEN}{June\hspace{1em}2016}
+%导师名字英文
+\renewcommand{\CARDC@FirstTutorNameEN}{Changshu Mei}
+%副导师名字英文
+\renewcommand{\CARDC@SecondTutorNameEN}{Liu Fei}
+%学生名字英文
+\renewcommand{\CARDC@StudentNameEN}{San Zhang}
+
+\makeatother
+
+%添加参考文献数据库
+\addbibresource{bib/ref.bib}
+
+\renewcommand{\bibsetup}{}
+
+\begin{document}
+
+    %中英文封面、独创性声明页
+    \maketitle
+
+\frontmatter
+
+    %致谢
+    \include{chapter/abstract}
+
+    \tableofcontents
+
+\mainmatter
+
+    %正文各个章节
+    \include{chapter/1}
+    \include{chapter/2}
+    \include{chapter/3}
+    %....继续增加章节
+
+    %参考文献
+    \YYBibAddRefToContent
+    \printbibliography
+
+    %附录，无请注释掉
+    \appendix
+        \include{chapter/appendix}
+
+\backmatter
+
+    %\include{chapter/TestBib}
+
+    %硕（博）阶段的成果
+    \include{chapter/achievement}
+
+    % 致谢
+	\include{chapter/thanks}%硕博致谢部分
+
+
+\end{document}

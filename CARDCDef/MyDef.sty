@@ -1,0 +1,119 @@
+﻿\ProvidesPackage{MyDef}
+
+%引入一些常用包
+\RequirePackage{subfig} %子图环境
+\captionsetup[subfloat]{font=small}
+
+\RequirePackage{enumitem} %控制罗列环境需要的包
+\setitemize{topsep=0pt} %设置 itemize 罗列环境顶端距离
+
+%===================================================================
+%长表格环境设置
+%===================================================================
+\RequirePackage{longtable} %长表格
+%\setlength{\LTpre}{0pt} %设置 longtable 与上文的距离
+%\setlength{\LTpost}{0pt} %设置 longtable 与下文的距离
+\renewcommand{\arraystretch}{1.3} %设置 longtable 行距的基本拉伸值
+\RequirePackage{booktabs} %制作表格粗框线
+%===================================================================
+
+%++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+%简化偏导数的输入
+%--------------------------------------------------------------------
+%使用示范：\piandao{a}{b} 表示 a 对 b 的 1 阶偏导数
+%或者 \piandao[n]{a}{b^n} 表示 a 对 b 的 n 阶偏导
+\newcommand{\piandao}[3][1]{
+    \ifthenelse{\equal{#1}{1}}{ %默认 1 阶导数
+        \frac{\partial #2}{\partial #3}
+    }{
+        \frac{\partial^{#1} #2}{\partial #3}
+    }
+}
+
+%定义数学直体的微分算子
+\newcommand{\opd}{\mathrm{d}}
+\newcommand{\opD}{\mathrm{D}}
+
+%导数，小写d
+\newcommand{\daoshu}[3][1]{
+    \ifthenelse{\equal{#1}{1}}{ %默认 1 阶导数
+        \frac{\opd #2}{\opd #3}
+    }{
+        \frac{\opd^{#1} #2}{\opd #3}
+    }
+}
+
+%导数，大写D
+\newcommand{\Daoshu}[3][1]{
+    \ifthenelse{\equal{#1}{1}}{ %默认 1 阶导数
+        \frac{\opD #2}{\opD #3}
+    }{
+        \frac{\opD^{#1} #2}{\opD #3}
+    }
+}
+%====================================================================
+
+
+%++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+%设置一个源码输入环境
+%--------------------------------------------------------------------
+\RequirePackage{fancybox}
+\RequirePackage{framed}
+
+% Redefine these colors to your liking in the preamble.
+\definecolor{TitleColor}{rgb}{0.126,0.263,0.361}
+\definecolor{InnerLinkColor}{rgb}{0.208,0.374,0.486}
+\definecolor{OuterLinkColor}{rgb}{0.216,0.439,0.388}
+% Redefine these colors to something if you want to have colored
+% background and border for code examples.
+\definecolor{VerbatimColor}{rgb}{0.9,0.9,0.9}
+\definecolor{VerbatimBorderColor}{rgb}{1,1,1}
+
+% Redefine the Verbatim environment to allow border and background colors.
+% The original environment is still used for verbatims within tables.
+\let\OriginalVerbatim=\Verbatim
+\let\endOriginalVerbatim=\endVerbatim
+
+\makeatletter
+% Play with vspace to be able to keep the indentation.
+\newlength\distancetoright
+\def\mycolorbox#1{%
+  \setlength\distancetoright{\linewidth}%
+  \advance\distancetoright -\@totalleftmargin %
+  \fcolorbox{VerbatimBorderColor}{VerbatimColor}{%
+  \begin{minipage}{\distancetoright}%
+    #1
+  \end{minipage}%
+  }%
+}
+\def\FrameCommand{\mycolorbox}
+\makeatother
+
+\renewcommand{\Verbatim}[1][1]{%
+  \vspace{-1ex} %引入设置，减小与上下文之间的空白
+  % list starts new par, but we don't want it to be set apart vertically
+  \bgroup\parskip=0pt%
+  %\smallskip%
+  % The list environement is needed to control perfectly the vertical
+  % space.
+  \list{}{%
+  \setlength\parskip{0pt}%
+  \setlength\itemsep{0ex}%
+  \setlength\topsep{0ex}%
+  \setlength\partopsep{0pt}%
+  \setlength\leftmargin{0pt}%
+  }%
+  \item\MakeFramed {\FrameRestore}%
+     \small%
+    \OriginalVerbatim[#1]%
+}
+\renewcommand{\endVerbatim}{%
+    \endOriginalVerbatim%
+  \endMakeFramed%
+  \endlist%
+  % close group to restore \parskip
+  \egroup%
+}
+%===================================================================
+
+\endinput

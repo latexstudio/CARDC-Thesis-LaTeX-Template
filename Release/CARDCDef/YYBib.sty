@@ -1,0 +1,392 @@
+﻿\NeedsTeXFormat{LaTeX2e}[2005/12/01]
+\ProvidesPackage{YYBib}[2015/12/01 by L.Y.]
+
+\newif\ifYYBib@Biber\YYBib@Biberfalse
+\DeclareOption{Biber}{\YYBib@Bibertrue}
+\DeclareOption*{%
+    \PackageError{YYBib}{Unknown option '\CurrentOption'}%
+}
+\ProcessOptions\relax
+
+\RequirePackage{xstring}    %
+\ifYYBib@Biber%
+    \RequirePackage[style=numeric-comp,sorting=none,firstinits=true,%
+        maxnames=3,minnames=3,backend=biber,%
+        date=iso8601, urldate=iso8601,%
+    ]{biblatex}
+\else
+    \RequirePackage[style=numeric-comp,sorting=none,firstinits=true,%
+        maxnames=3,minnames=3,backend=bibtex,%
+        date=iso8601, urldate=iso8601,%
+    ]{biblatex}
+\fi
+
+\newcommand{\scite}[1]{\textsuperscript{\cite{#1}}}
+
+\newcommand{\YYBibAddRefToContent}{
+    \cleardoublepage    %
+    \phantomsection     %
+    \addcontentsline{toc}{chapter}{参考文献}
+}
+
+\RequirePackage{xstring}    %
+
+\DeclareListFormat{isChineseOrOthers}{%
+    \IfStrEq{#1}{chinese}{等}{et\addabbrvspace al}
+}
+
+\DefineBibliographyStrings{english}{%
+    andothers={%
+        \iflistundef{language}{et\addabbrvspace al}{%
+            \printlist[isChineseOrOthers]{language}}%
+        },
+    andmore={%
+        \iflistundef{language}{et\addabbrvspace al}{%
+            \printlist[isChineseOrOthers]{language}}%
+        },
+    bibliography={参考文献},
+}
+
+\newcounter{YYBib@BibLangLabel}
+\setcounter{YYBib@BibLangLabel}{0}
+
+\DeclareListFormat{YYBib@chineseRefFormat}{%
+    \IfStrEq{#1}{chinese}{\setcounter{YYBib@BibLangLabel}{1}}{}%
+}
+\newcommand{\YYBib@getDATALang}{%
+    \printlist[YYBib@chineseRefFormat]{language}%
+}
+
+\urlstyle{rm}
+
+\renewcommand{\bibinitperiod}{}
+\renewcommand{\bibinithyphendelim}{\mbox{-}}
+
+\DeclareNameFormat{YYBib@NameENFormat:last-first}{%
+    \ifthenelse{\value{listtotal}>\value{liststop}}%
+    {%
+        \usebibmacro{YYBib@NameEN:last-first}{#1}{#4}{#5}{#7}%
+        \ifthenelse{\value{listcount}<\value{liststop}}
+        {,\addspace}%
+        {,\addspace et al}%
+    }%
+    {%
+        \usebibmacro{YYBib@NameEN:last-first}{#1}{#4}{#5}{#7}%
+        \ifthenelse{\value{listcount}<\value{listtotal}}
+        {,\addspace}%
+        {}%
+    }%
+}
+
+\newbibmacro*{YYBib@NameEN:last-first}[4]{%
+    \StrDel{#2}{.}[\YYBib@LastNameNoDots]%
+    \ifblank{#3}{}{#3\addspace}%
+    \ifblank{#1}{}{#1%
+        \ifboolexpr{%
+            test {\ifblank{#4}}
+            and
+            test {\ifblank{#2}}
+        }{}{\addspace}%
+    }%
+    \ifblank{#4}{}{#4%
+        \ifblank{#2}{}{\addspace}%
+    }%
+    \ifblank{#2}{}{\YYBib@LastNameNoDots}%
+}
+
+\renewcommand{\finalnamedelim}{, }
+\renewcommand{\bibitemsep}{0pt}
+\renewcommand{\biblabelsep}{0.5em}
+
+\DeclareFieldFormat{YYBib@ArtTitleFormat}{#1\text{[J]}}
+\DeclareFieldFormat{YYBib@ArtJournalFormatCN}{#1}
+\DeclareFieldFormat{YYBib@ArtJournalFormatEN}{#1}
+\DeclareFieldFormat{YYBib@ArtYear}{, #1}
+\DeclareFieldFormat{YYBib@ArtVolumn}{, #1}
+\DeclareFieldFormat{YYBib@ArtNumber}{(#1)}
+\DeclareFieldFormat{YYBib@Artpages}{: #1}
+
+\DeclareBibliographyDriver{article}{%
+\YYBib@getDATALang%
+\ifnum\theYYBib@BibLangLabel=1%
+    \printnames{author}%
+    \newunit\newblock
+    \printfield[YYBib@ArtTitleFormat]{title}%
+    \newunit\newblock
+    \printfield[YYBib@ArtJournalFormatCN]{journaltitle}%
+    \printfield[YYBib@ArtYear]{year}%
+    \printfield[YYBib@ArtVolumn]{volumn}%
+    \printfield[YYBib@ArtNumber]{number}%
+    \printfield[YYBib@Artpages]{pages}%
+\else%
+    \printnames[YYBib@NameENFormat:last-first]{author}%
+    \newunit\newblock
+    \printfield[YYBib@ArtTitleFormat]{title}%
+    \newunit\newblock
+    \printfield[YYBib@ArtJournalFormatEN]{journaltitle}%
+    \printfield[YYBib@ArtYear]{year}%
+    \printfield[YYBib@ArtVolumn]{volumn}%
+    \printfield[YYBib@ArtNumber]{number}%
+    \printfield[YYBib@Artpages]{pages}%
+\fi%
+    \setcounter{YYBib@BibLangLabel}{0}%
+\finentry}
+
+\DeclareFieldFormat{YYBib@BookTitleFormat}{#1\text{[M]}}
+\DeclareListFormat{YYBib@BookPublisherFormatCN}{: #1}
+\DeclareListFormat{YYBib@BookPublisherFormatEN}{: #1}
+\DeclareFieldFormat{YYBib@BookEdtionFormatCN}{#1版}
+\DeclareFieldFormat{YYBib@BookYear}{, #1}
+\DeclareFieldFormat{YYBib@Bookpages}{: #1}
+
+\DeclareNameFormat{YYBib@TranslatorFormatCN}{%
+    \ifthenelse{\value{listtotal}>\value{liststop}}%
+    {%
+        #1%
+        \ifthenelse{\value{listcount}<\value{liststop}}
+        {,\addspace}%
+        {,\addspace 等译}%
+    }%
+    {%
+        #1%
+        \ifthenelse{\value{listcount}<\value{listtotal}}
+        {,\addspace}%
+        {,\addspace 译}%
+    }%
+}
+
+\DeclareBibliographyDriver{book}{%
+\YYBib@getDATALang%
+\ifnum\theYYBib@BibLangLabel=1%
+    \printnames{author}%
+    \newunit\newblock
+    \printfield[YYBib@BookTitleFormat]{title}%
+    \newunit\newblock
+    \printnames[YYBib@TranslatorFormatCN]{translator}%
+    \newunit\newblock
+    \printfield[YYBib@BookEdtionFormatCN]{edition}%
+    \newunit\newblock
+    \printlist{location}%
+    \printlist[YYBib@BookPublisherFormatCN]{publisher}%
+    \printfield[YYBib@BookYear]{year}%
+    \printfield[YYBib@Bookpages]{pages}%
+\else%
+    \printnames[YYBib@NameENFormat:last-first]{author}%
+    \newunit\newblock
+    \printfield[YYBib@BookTitleFormat]{title}%
+    \newunit\newblock
+    \printfield{edition}%
+    \newunit\newblock
+    \printlist{location}%
+    \printlist[YYBib@BookPublisherFormatEN]{publisher}%
+    \printfield[YYBib@BookYear]{year}%
+    \printfield[YYBib@Bookpages]{pages}%
+\fi%
+    \setcounter{YYBib@BibLangLabel}{0}%
+\finentry}
+
+\DeclareFieldFormat{YYBib@ThesisTitleFormat}{#1\text{[D]}}
+\DeclareListFormat{YYBib@ThesisSchoolFormatCN}{: #1}
+\DeclareListFormat{YYBib@ThesisSchoolFormatEN}{: #1}
+\DeclareFieldFormat{YYBib@ThesisYear}{, #1}
+\DeclareFieldFormat{YYBib@Thesispages}{: #1}
+
+\DeclareBibliographyDriver{thesis}{%
+\YYBib@getDATALang%
+\ifnum\theYYBib@BibLangLabel=1%
+    \printnames{author}%
+    \newunit\newblock
+    \printfield[YYBib@ThesisTitleFormat]{title}%
+    \newunit\newblock
+    \printlist{location}%
+    \printlist[YYBib@ThesisSchoolFormatCN]{institution}%
+    \printfield[YYBib@ThesisYear]{year}%
+    \printfield[YYBib@Thesispages]{pages}%
+\else%
+    \printnames[YYBib@NameENFormat:last-first]{author}%
+    \newunit\newblock
+    \printfield[YYBib@ThesisTitleFormat]{title}%
+    \newunit\newblock
+    \printlist{location}%
+    \printlist[YYBib@ThesisSchoolFormatEN]{institution}%
+    \printfield[YYBib@ThesisYear]{year}%
+    \printfield[YYBib@Thesispages]{pages}%
+\fi%
+    \setcounter{YYBib@BibLangLabel}{0}%
+\finentry}
+
+\DeclareFieldFormat{YYBib@ReportTitleFormat}{#1\text{[R]}}
+\DeclareListFormat{YYBib@ReportSchoolFormatCN}{: #1}
+\DeclareListFormat{YYBib@ReportSchoolFormatEN}{: #1}
+\DeclareFieldFormat{YYBib@ReportYear}{, #1}
+\DeclareFieldFormat{YYBib@Reportpages}{: #1}
+
+\DeclareBibliographyDriver{report}{%
+\YYBib@getDATALang%
+\ifnum\theYYBib@BibLangLabel=1%
+    \printnames{author}%
+    \newunit\newblock
+    \printfield[YYBib@ReportTitleFormat]{title}%
+    \newunit\newblock
+    \printlist{location}%
+    \printlist[YYBib@ReportSchoolFormatCN]{institution}%
+    \printfield[YYBib@ReportYear]{year}%
+    \printfield[YYBib@Reportpages]{pages}%
+\else%
+    \printnames[YYBib@NameENFormat:last-first]{author}%
+    \newunit\newblock
+    \printfield[YYBib@ReportTitleFormat]{title}%
+    \newunit\newblock
+    \printlist{location}%
+    \printlist[YYBib@ReportSchoolFormatEN]{institution}%
+    \printfield[YYBib@ReportYear]{year}%
+    \printfield[YYBib@Reportpages]{pages}%
+\fi%
+    \setcounter{YYBib@BibLangLabel}{0}%
+\finentry}
+
+\DeclareFieldFormat{YYBib@ProceedingsTitleFormat}{#1\text{[C]}}
+\DeclareListFormat{YYBib@ProceedingsPublisherFormatCN}{: #1}
+\DeclareListFormat{YYBib@ProceedingsPublisherFormatEN}{: #1}
+\DeclareFieldFormat{YYBib@ProceedingsYear}{, #1}
+\DeclareFieldFormat{YYBib@Proceedingspages}{: #1}
+
+\DeclareBibliographyDriver{proceedings}{%
+\YYBib@getDATALang%
+\ifnum\theYYBib@BibLangLabel=1%
+    \printnames{author}%
+    \newunit\newblock
+    \printfield[YYBib@ProceedingsTitleFormat]{title}%
+    \newunit\newblock
+    \printlist{location}%
+    \printlist[YYBib@ProceedingsPublisherFormatCN]{institution}%
+    \printfield[YYBib@ProceedingsYear]{year}%
+    \printfield[YYBib@Proceedingspages]{pages}%
+\else%
+    \printnames[YYBib@NameENFormat:last-first]{author}%
+    \newunit\newblock
+    \printfield[YYBib@ProceedingsTitleFormat]{title}%
+    \newunit\newblock
+    \printlist{location}%
+    \printlist[YYBib@ProceedingsPublisherFormatEN]{institution}%
+    \printfield[YYBib@ProceedingsYear]{year}%
+    \printfield[YYBib@Proceedingspages]{pages}%
+\fi%
+    \setcounter{YYBib@BibLangLabel}{0}%
+\finentry}
+
+\DeclareFieldFormat{YYBib@InproceedingsTitleFormat}{#1\text{[A]}}
+\DeclareFieldFormat{YYBib@InpArtTitleFormat}{#1\text{[C]}}
+\DeclareListFormat{YYBib@InproceedingsPublisherFormatCN}{: #1}
+\DeclareListFormat{YYBib@InproceedingsPublisherFormatEN}{: #1}
+\DeclareFieldFormat{YYBib@InproceedingsEdtionFormatCN}{#1版}
+\DeclareFieldFormat{YYBib@InproceedingsYear}{, #1}
+\DeclareFieldFormat{YYBib@Inproceedingspages}{: #1}
+
+\DeclareBibliographyDriver{inproceedings}{%
+\YYBib@getDATALang%
+\ifnum\theYYBib@BibLangLabel=1%
+    \printnames{author}%
+    \newunit\newblock
+    \printfield[YYBib@InproceedingsTitleFormat]{title}%
+    \newunit\newblock
+    \printnames{bookauthor}%
+    \newunit\newblock
+    \printfield[YYBib@InpArtTitleFormat]{booktitle}%
+    \newunit\newblock
+    \printlist{location}%
+    \printlist[YYBib@InproceedingsPublisherFormatCN]{publisher}%
+    \printfield[YYBib@InproceedingsYear]{year}%
+    \printfield[YYBib@Inproceedingspages]{pages}%
+\else%
+    \printnames[YYBib@NameENFormat:last-first]{author}%
+    \newunit\newblock
+    \printfield[YYBib@InproceedingsTitleFormat]{title}%
+    \newunit\newblock
+    \printnames[YYBib@NameENFormat:last-first]{bookauthor}%
+    \newunit\newblock
+    \printfield[YYBib@InpArtTitleFormat]{booktitle}%
+    \newunit\newblock
+    \printlist{location}%
+    \printlist[YYBib@InproceedingsPublisherFormatEN]{publisher}%
+    \printfield[YYBib@InproceedingsYear]{year}%
+    \printfield[YYBib@Inproceedingspages]{pages}%
+\fi%
+    \setcounter{YYBib@BibLangLabel}{0}%
+\finentry}
+
+\DeclareFieldFormat{YYBib@PatentTitleFormat}{#1}
+\DeclareListFormat{YYBib@PatentCountryFormat}{: #1}
+\DeclareFieldFormat{YYBib@PatentNumberFormat}{, #1\text{[P]}}
+\DeclareFieldFormat{YYBib@PatentPubDateFormat}{#1}
+\DeclareFieldFormat{YYBib@PatentUseDateFormat}{[#1]}
+\DeclareFieldFormat{YYBib@PatentUrlFormat}{\url{#1}}
+
+\DeclareFieldFormat{urldate}{#1}
+
+\newcommand{\YYBib@printPatentURLdate}{%
+    \iffieldundef{urlyear}{}{%
+        \printtext{[}\printurldate\printtext{]}%
+    }%
+}
+
+\DeclareBibliographyDriver{patent}{%
+\YYBib@getDATALang%
+\ifnum\theYYBib@BibLangLabel=1%
+    \printnames{author}%
+    \newunit\newblock
+    \printfield[YYBib@PatentTitleFormat]{title}%
+    \printlist[YYBib@PatentCountryFormat]{location}%
+    \printfield[YYBib@PatentNumberFormat]{number}%
+    \newunit\newblock
+    \printdate%
+    \YYBib@printPatentURLdate%
+    \newunit\newblock
+    \printfield[YYBib@PatentUrlFormat]{url}%
+\else%
+    \printnames[YYBib@NameENFormat:last-first]{author}%
+    \newunit\newblock
+    \printfield[YYBib@PatentTitleFormat]{title}%
+    \printlist[YYBib@PatentCountryFormat]{location}%
+    \printfield[YYBib@PatentNumberFormat]{number}%
+    \newunit\newblock
+    \printdate%
+    \YYBib@printPatentURLdate%
+    \newunit\newblock
+    \printfield[YYBib@PatentUrlFormat]{url}%
+\fi%
+    \setcounter{YYBib@BibLangLabel}{0}%
+\finentry}
+
+\DeclareFieldFormat{YYBib@OnlineTitleFormat}{#1\text{[EB/OL]}}
+\DeclareFieldFormat{YYBib@OnlineUrlFormat}{\url{#1}}
+
+\newcommand{\YYBib@printOnlineURLdate}{%
+    \iffieldundef{urlyear}{}{%
+        \printtext{/}\printurldate%
+    }%
+}
+
+\DeclareBibliographyDriver{online}{%
+\YYBib@getDATALang%
+\ifnum\theYYBib@BibLangLabel=1%
+    \printnames{author}
+    \newunit\newblock
+    \printfield[YYBib@OnlineTitleFormat]{title}
+    \newunit\newblock
+    \printfield[YYBib@OnlineUrlFormat]{url}%
+    \printtext{, }\printdate%
+    \YYBib@printOnlineURLdate%
+\else%
+    \printnames[YYBib@NameENFormat:last-first]{author}
+    \newunit\newblock
+    \printfield[YYBib@OnlineTitleFormat]{title}
+    \newunit\newblock
+    \printfield[YYBib@OnlineUrlFormat]{url}%
+    \printtext{, }\printdate%
+    \YYBib@printOnlineURLdate%
+\fi%
+    \setcounter{YYBib@BibLangLabel}{0}%
+\finentry}
+
+\endinput

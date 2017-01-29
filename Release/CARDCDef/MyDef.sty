@@ -1,0 +1,87 @@
+﻿\ProvidesPackage{MyDef}
+
+\RequirePackage{subfig} %
+\captionsetup[subfloat]{font=small}
+
+\RequirePackage{enumitem} %
+\setitemize{topsep=0pt} %
+
+\RequirePackage{longtable} %
+\renewcommand{\arraystretch}{1.3} %
+\RequirePackage{booktabs} %
+
+\newcommand{\piandao}[3][1]{
+    \ifthenelse{\equal{#1}{1}}{ %
+        \frac{\partial #2}{\partial #3}
+    }{
+        \frac{\partial^{#1} #2}{\partial #3}
+    }
+}
+
+\newcommand{\opd}{\mathrm{d}}
+\newcommand{\opD}{\mathrm{D}}
+
+\newcommand{\daoshu}[3][1]{
+    \ifthenelse{\equal{#1}{1}}{ %
+        \frac{\opd #2}{\opd #3}
+    }{
+        \frac{\opd^{#1} #2}{\opd #3}
+    }
+}
+
+\newcommand{\Daoshu}[3][1]{
+    \ifthenelse{\equal{#1}{1}}{ %
+        \frac{\opD #2}{\opD #3}
+    }{
+        \frac{\opD^{#1} #2}{\opD #3}
+    }
+}
+
+\RequirePackage{fancybox}
+\RequirePackage{framed}
+
+\definecolor{TitleColor}{rgb}{0.126,0.263,0.361}
+\definecolor{InnerLinkColor}{rgb}{0.208,0.374,0.486}
+\definecolor{OuterLinkColor}{rgb}{0.216,0.439,0.388}
+\definecolor{VerbatimColor}{rgb}{0.9,0.9,0.9}
+\definecolor{VerbatimBorderColor}{rgb}{1,1,1}
+
+\let\OriginalVerbatim=\Verbatim
+\let\endOriginalVerbatim=\endVerbatim
+
+\makeatletter
+\newlength\distancetoright
+\def\mycolorbox#1{%
+  \setlength\distancetoright{\linewidth}%
+  \advance\distancetoright -\@totalleftmargin %
+  \fcolorbox{VerbatimBorderColor}{VerbatimColor}{%
+  \begin{minipage}{\distancetoright}%
+    #1
+  \end{minipage}%
+  }%
+}
+\def\FrameCommand{\mycolorbox}
+\makeatother
+
+\renewcommand{\Verbatim}[1][1]{%
+  \vspace{-1ex} %
+  \bgroup\parskip=0pt%
+  \list{}{%
+  \setlength\parskip{0pt}%
+  \setlength\itemsep{0ex}%
+  \setlength\topsep{0ex}%
+  \setlength\partopsep{0pt}%
+  \setlength\leftmargin{0pt}%
+  }%
+  \item\MakeFramed {\FrameRestore}%
+     \small%
+    \OriginalVerbatim[#1]%
+}
+\renewcommand{\endVerbatim}{%
+    \endOriginalVerbatim%
+  \endMakeFramed%
+  \endlist%
+  \egroup%
+}
+
+\endinput

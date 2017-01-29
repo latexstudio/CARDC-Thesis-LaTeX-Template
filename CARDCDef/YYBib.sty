@@ -1,0 +1,545 @@
+﻿\NeedsTeXFormat{LaTeX2e}[2005/12/01]
+\ProvidesPackage{YYBib}[2015/12/01 by L.Y.]
+
+%是否使用Biber处理参考文献，提供Biber选项
+\newif\ifYYBib@Biber\YYBib@Biberfalse
+\DeclareOption{Biber}{\YYBib@Bibertrue}
+\DeclareOption*{%
+    \PackageError{YYBib}{Unknown option '\CurrentOption'}%
+}
+\ProcessOptions\relax
+
+\RequirePackage{xstring}    %字符串比较
+%++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+%参考文献格式设置
+%需要注意该包与诸多涉及参考文献的包不兼容，一般编译时会提示不兼容错误
+%--------------------------------------------------------------------
+%是否使用Biber处理参考文献，默认不使用
+\ifYYBib@Biber%
+    \RequirePackage[style=numeric-comp,sorting=none,firstinits=true,%
+        maxnames=3,minnames=3,backend=biber,%
+        date=iso8601, urldate=iso8601,%
+    ]{biblatex}
+\else
+    \RequirePackage[style=numeric-comp,sorting=none,firstinits=true,%
+        maxnames=3,minnames=3,backend=bibtex,%
+        date=iso8601, urldate=iso8601,%
+    ]{biblatex}
+\fi
+
+
+%引用样式，上标且中括号括起来
+\newcommand{\scite}[1]{\textsuperscript{\cite{#1}}}
+
+%将参考文献条目添加到目录
+\newcommand{\YYBibAddRefToContent}{
+    \cleardoublepage    %使得目录中页码正确
+    \phantomsection     %使得书签链接正确，需hyperref包
+    \addcontentsline{toc}{chapter}{参考文献}
+}
+
+\RequirePackage{xstring}    %字符串比较
+
+%++++++++++++++++++++++++++++++++++++++++++
+%修改局部\bibstring，使得中文文献可用之
+%------------------------------------------
+%利用\printlist命令处理language域这个list项
+\DeclareListFormat{isChineseOrOthers}{%
+    \IfStrEq{#1}{chinese}{等}{et\addabbrvspace al}
+}
+
+\DefineBibliographyStrings{english}{%
+    andothers={%
+        \iflistundef{language}{et\addabbrvspace al}{%
+            \printlist[isChineseOrOthers]{language}}%
+        },
+    andmore={%
+        \iflistundef{language}{et\addabbrvspace al}{%
+            \printlist[isChineseOrOthers]{language}}%
+        },
+    %references={参考文献},
+    bibliography={参考文献},
+}
+%==========================================
+
+%++++++++++++++++++++++++++++++++++++++++++
+%通过文献的language域判断文献是否为中文，
+%并将判断保存
+%------------------------------------------
+%是否为中文文献，默认为否
+%\newif\ifYYBib@isChineseDATA
+%利用\printlist命令处理language域这个list项
+%定义数字，与语言对应，便于扩展
+\newcounter{YYBib@BibLangLabel}
+%默认为0表示非中文，1表示中文
+\setcounter{YYBib@BibLangLabel}{0}
+
+\DeclareListFormat{YYBib@chineseRefFormat}{%
+    %\IfStrEq{#1}{chinese}{\YYBib@isChineseDATAtrue}{}%
+    \IfStrEq{#1}{chinese}{\setcounter{YYBib@BibLangLabel}{1}}{}%
+}
+%判断是否为中文文献，每种类型开始前执行该命令
+\newcommand{\YYBib@getDATALang}{%
+    \printlist[YYBib@chineseRefFormat]{language}%
+}
+%==========================================
+
+
+%++++++++++++++++++++++++++++++++++++++++++
+%文献各部分数据的格式定义
+%------------------------------------------
+%url字体
+\urlstyle{rm}
+
+%Biber处理用到的符号
+%first name缩写后添加
+\renewcommand{\bibinitperiod}{}
+%first name连字缩写后添加的连字符
+\renewcommand{\bibinithyphendelim}{\mbox{-}}
+
+%处理英文名字列表
+\DeclareNameFormat{YYBib@NameENFormat:last-first}{%
+    \ifthenelse{\value{listtotal}>\value{liststop}}%
+    {%总数大于截断数目,
+        \usebibmacro{YYBib@NameEN:last-first}{#1}{#4}{#5}{#7}%
+        \ifthenelse{\value{listcount}<\value{liststop}}
+        {,\addspace}%
+        {,\addspace et al}%最后一项
+    }%
+    {%总数小于等于截断数目, 不需要加\bibstring{andothers}
+        \usebibmacro{YYBib@NameEN:last-first}{#1}{#4}{#5}{#7}%
+        \ifthenelse{\value{listcount}<\value{listtotal}}
+        {,\addspace}%
+        {}%最后一项
+    }%
+}
+
+%名字输出格式为：
+% 连接词(例如 von van de la ) 姓(lastname)
+% 后缀(affiex) 名缩写(firstname)
+\newbibmacro*{YYBib@NameEN:last-first}[4]{%
+% #1:lastname #2:firstname
+% #3:prefixs  #4:affiex 不常见
+    \StrDel{#2}{.}[\YYBib@LastNameNoDots]%去除姓字符串的.
+    \ifblank{#3}{}{#3\addspace}%连接词非最后一项，故添加小空白
+    \ifblank{#1}{}{#1%\MakeUppercase{#1}这里不大写了，占地方、难看！！！
+        \ifboolexpr{%非最后非空项加上小空白
+            test {\ifblank{#4}}
+            and
+            test {\ifblank{#2}}
+        }{}{\addspace}%
+    }%
+    \ifblank{#4}{}{#4%非最后非空项加上空格
+        \ifblank{#2}{}{\addspace}%
+    }%
+    \ifblank{#2}{}{\YYBib@LastNameNoDots}%
+}
+%==========================================
+
+
+%++++++++++++++++++++++++++++++++++++++++++
+%结构参数定义
+%------------------------------------------
+\renewcommand{\finalnamedelim}{, }
+%条目之间的距离，默认为\itemsep，
+%且包导入时即被定义
+\renewcommand{\bibitemsep}{0pt}
+%条目与标签的距离，默认为2\labelsep
+%同时，包导入时即被定义
+\renewcommand{\biblabelsep}{0.5em}
+%==========================================
+
+
+%++++++++++++++++++++++++++++++++++++++++++
+%一、期刊格式：
+%作者. 文章标题[文献类型]. 期刊名称, 年份, 卷(期): 页码.
+%------------------------------------------
+%文章标题
+\DeclareFieldFormat{YYBib@ArtTitleFormat}{#1\text{[J]}}
+%期刊名字
+\DeclareFieldFormat{YYBib@ArtJournalFormatCN}{#1}
+\DeclareFieldFormat{YYBib@ArtJournalFormatEN}{#1}
+%年份
+\DeclareFieldFormat{YYBib@ArtYear}{, #1}
+%卷号
+\DeclareFieldFormat{YYBib@ArtVolumn}{, #1}
+%期号
+\DeclareFieldFormat{YYBib@ArtNumber}{(#1)}
+%页码
+\DeclareFieldFormat{YYBib@Artpages}{: #1}
+
+\DeclareBibliographyDriver{article}{%
+\YYBib@getDATALang%先获得文献类型
+\ifnum\theYYBib@BibLangLabel=1%中文
+    \printnames{author}%作者列表
+    \newunit\newblock
+    \printfield[YYBib@ArtTitleFormat]{title}%文章名字
+    \newunit\newblock
+    \printfield[YYBib@ArtJournalFormatCN]{journaltitle}%杂志名称
+    \printfield[YYBib@ArtYear]{year}%出版年
+    \printfield[YYBib@ArtVolumn]{volumn}%卷号
+    \printfield[YYBib@ArtNumber]{number}%期号
+    \printfield[YYBib@Artpages]{pages}%页码
+\else%英文
+    \printnames[YYBib@NameENFormat:last-first]{author}%作者列表
+    \newunit\newblock
+    \printfield[YYBib@ArtTitleFormat]{title}%文章名字
+    \newunit\newblock
+    \printfield[YYBib@ArtJournalFormatEN]{journaltitle}%杂志名称
+    \printfield[YYBib@ArtYear]{year}%出版年
+    \printfield[YYBib@ArtVolumn]{volumn}%卷号
+    \printfield[YYBib@ArtNumber]{number}%期号
+    \printfield[YYBib@Artpages]{pages}%页码
+\fi%
+    \setcounter{YYBib@BibLangLabel}{0}%重置
+\finentry}
+%==========================================
+
+
+
+%++++++++++++++++++++++++++++++++++++++++++
+%二、书籍格式：主要责任者(作者). 书名[M]. 其他责任者(译者).
+%版本项. 出版地:出版者, 出版年. 页码.
+%------------------------------------------
+%各项格式定义
+%书名
+\DeclareFieldFormat{YYBib@BookTitleFormat}{#1\text{[M]}}
+%出版者
+\DeclareListFormat{YYBib@BookPublisherFormatCN}{: #1}
+\DeclareListFormat{YYBib@BookPublisherFormatEN}{: #1}
+\DeclareFieldFormat{YYBib@BookEdtionFormatCN}{#1版}
+%年份
+\DeclareFieldFormat{YYBib@BookYear}{, #1}
+%页码
+\DeclareFieldFormat{YYBib@Bookpages}{: #1}
+
+%译者 根据译者人数不同输出不同样式
+\DeclareNameFormat{YYBib@TranslatorFormatCN}{%
+    \ifthenelse{\value{listtotal}>\value{liststop}}%
+    {%总数大于截断数目,
+        #1%
+        \ifthenelse{\value{listcount}<\value{liststop}}
+        {,\addspace}%
+        {,\addspace 等译}%最后一项
+    }%
+    {%总数小于等于截断数目, 不需要加\bibstring{andothers}
+        #1%
+        \ifthenelse{\value{listcount}<\value{listtotal}}
+        {,\addspace}%
+        {,\addspace 译}%最后一项
+    }%
+}
+
+\DeclareBibliographyDriver{book}{%
+\YYBib@getDATALang%先获得文献类型
+\ifnum\theYYBib@BibLangLabel=1%中文
+    \printnames{author}%作者列表
+    \newunit\newblock
+    \printfield[YYBib@BookTitleFormat]{title}%文章名字
+    \newunit\newblock
+    \printnames[YYBib@TranslatorFormatCN]{translator}%译者
+    \newunit\newblock
+    \printfield[YYBib@BookEdtionFormatCN]{edition}%版本项
+    \newunit\newblock
+    \printlist{location}%出版地
+    \printlist[YYBib@BookPublisherFormatCN]{publisher}%出版者
+    \printfield[YYBib@BookYear]{year}%出版年
+    \printfield[YYBib@Bookpages]{pages}%页码
+\else%英文
+    \printnames[YYBib@NameENFormat:last-first]{author}%作者列表
+    \newunit\newblock
+    \printfield[YYBib@BookTitleFormat]{title}%文章名字
+    \newunit\newblock
+    \printfield{edition}%版本项
+    \newunit\newblock
+    \printlist{location}%出版地
+    \printlist[YYBib@BookPublisherFormatEN]{publisher}%出版者
+    \printfield[YYBib@BookYear]{year}%出版年
+    \printfield[YYBib@Bookpages]{pages}%页码
+\fi%
+    \setcounter{YYBib@BibLangLabel}{0}%重置
+\finentry}
+%==========================================
+
+
+%++++++++++++++++++++++++++++++++++++++++++
+%三、学位论文：主要责任者(作者). 标题[D].
+%出版地:出版者, 出版年. 页码.
+%------------------------------------------
+%各项格式定义
+%标题
+\DeclareFieldFormat{YYBib@ThesisTitleFormat}{#1\text{[D]}}
+%出版者
+\DeclareListFormat{YYBib@ThesisSchoolFormatCN}{: #1}
+\DeclareListFormat{YYBib@ThesisSchoolFormatEN}{: #1}
+%年份
+\DeclareFieldFormat{YYBib@ThesisYear}{, #1}
+%页码
+\DeclareFieldFormat{YYBib@Thesispages}{: #1}
+
+\DeclareBibliographyDriver{thesis}{%
+\YYBib@getDATALang%先获得文献类型
+\ifnum\theYYBib@BibLangLabel=1%中文
+    \printnames{author}%作者列表
+    \newunit\newblock
+    \printfield[YYBib@ThesisTitleFormat]{title}%文章名字
+    \newunit\newblock
+    \printlist{location}%出版地
+    \printlist[YYBib@ThesisSchoolFormatCN]{institution}%学校或机构
+    \printfield[YYBib@ThesisYear]{year}%出版年
+    \printfield[YYBib@Thesispages]{pages}%页码
+\else%英文
+    \printnames[YYBib@NameENFormat:last-first]{author}%作者列表
+    \newunit\newblock
+    \printfield[YYBib@ThesisTitleFormat]{title}%文章名字
+    \newunit\newblock
+    \printlist{location}%出版地
+    \printlist[YYBib@ThesisSchoolFormatEN]{institution}%学校或机构
+    \printfield[YYBib@ThesisYear]{year}%出版年
+    \printfield[YYBib@Thesispages]{pages}%页码
+\fi%
+    \setcounter{YYBib@BibLangLabel}{0}%重置
+\finentry}
+%==========================================
+
+
+%各项同上
+%++++++++++++++++++++++++++++++++++++++++++
+%四、报告：主要责任者(作者). 标题[D].
+%出版地:出版者, 出版年. 页码.
+%------------------------------------------
+%各项格式定义
+%标题
+\DeclareFieldFormat{YYBib@ReportTitleFormat}{#1\text{[R]}}
+%出版者
+\DeclareListFormat{YYBib@ReportSchoolFormatCN}{: #1}
+\DeclareListFormat{YYBib@ReportSchoolFormatEN}{: #1}
+%年份
+\DeclareFieldFormat{YYBib@ReportYear}{, #1}
+%页码
+\DeclareFieldFormat{YYBib@Reportpages}{: #1}
+
+\DeclareBibliographyDriver{report}{%
+\YYBib@getDATALang%先获得文献类型
+\ifnum\theYYBib@BibLangLabel=1%中文
+    \printnames{author}%作者列表
+    \newunit\newblock
+    \printfield[YYBib@ReportTitleFormat]{title}%文章名字
+    \newunit\newblock
+    \printlist{location}%出版地
+    \printlist[YYBib@ReportSchoolFormatCN]{institution}%学校或机构
+    \printfield[YYBib@ReportYear]{year}%出版年
+    \printfield[YYBib@Reportpages]{pages}%页码
+\else%英文
+    \printnames[YYBib@NameENFormat:last-first]{author}%作者列表
+    \newunit\newblock
+    \printfield[YYBib@ReportTitleFormat]{title}%文章名字
+    \newunit\newblock
+    \printlist{location}%出版地
+    \printlist[YYBib@ReportSchoolFormatEN]{institution}%学校或机构
+    \printfield[YYBib@ReportYear]{year}%出版年
+    \printfield[YYBib@Reportpages]{pages}%页码
+\fi%
+    \setcounter{YYBib@BibLangLabel}{0}%重置
+\finentry}
+%==========================================
+
+
+%和Book类基本相同
+%++++++++++++++++++++++++++++++++++++++++++
+%五、会议论文集：主要责任者(作者). 标题[D].
+%出版地:出版者, 出版年. 页码.
+%------------------------------------------
+%各项格式定义
+%标题
+\DeclareFieldFormat{YYBib@ProceedingsTitleFormat}{#1\text{[C]}}
+%出版者
+\DeclareListFormat{YYBib@ProceedingsPublisherFormatCN}{: #1}
+\DeclareListFormat{YYBib@ProceedingsPublisherFormatEN}{: #1}
+%年份
+\DeclareFieldFormat{YYBib@ProceedingsYear}{, #1}
+%页码
+\DeclareFieldFormat{YYBib@Proceedingspages}{: #1}
+
+\DeclareBibliographyDriver{proceedings}{%
+\YYBib@getDATALang%先获得文献类型
+\ifnum\theYYBib@BibLangLabel=1%中文
+    \printnames{author}%作者列表
+    \newunit\newblock
+    \printfield[YYBib@ProceedingsTitleFormat]{title}%文章名字
+    \newunit\newblock
+    \printlist{location}%出版地
+    \printlist[YYBib@ProceedingsPublisherFormatCN]{institution}%学校或机构
+    \printfield[YYBib@ProceedingsYear]{year}%出版年
+    \printfield[YYBib@Proceedingspages]{pages}%页码
+\else%英文
+    \printnames[YYBib@NameENFormat:last-first]{author}%作者列表
+    \newunit\newblock
+    \printfield[YYBib@ProceedingsTitleFormat]{title}%文章名字
+    \newunit\newblock
+    \printlist{location}%出版地
+    \printlist[YYBib@ProceedingsPublisherFormatEN]{institution}%学校或机构
+    \printfield[YYBib@ProceedingsYear]{year}%出版年
+    \printfield[YYBib@Proceedingspages]{pages}%页码
+\fi%
+    \setcounter{YYBib@BibLangLabel}{0}%重置
+\finentry}
+%==========================================
+
+
+%++++++++++++++++++++++++++++++++++++++++++
+%六、论文集中的析出文献：文献主要责任者(作者). 文献名[A].
+%论文集主要责任者(可选). 论文集名称[C]. 出版地: 出版者, 出版年. 页码(可选).
+%------------------------------------------
+%各项格式定义
+%文章名
+\DeclareFieldFormat{YYBib@InproceedingsTitleFormat}{#1\text{[A]}}
+%书名
+\DeclareFieldFormat{YYBib@InpArtTitleFormat}{#1\text{[C]}}
+%出版者，英文斜体
+\DeclareListFormat{YYBib@InproceedingsPublisherFormatCN}{: #1}
+\DeclareListFormat{YYBib@InproceedingsPublisherFormatEN}{: #1}
+\DeclareFieldFormat{YYBib@InproceedingsEdtionFormatCN}{#1版}
+%年份
+\DeclareFieldFormat{YYBib@InproceedingsYear}{, #1}
+%页码
+\DeclareFieldFormat{YYBib@Inproceedingspages}{: #1}
+
+\DeclareBibliographyDriver{inproceedings}{%
+\YYBib@getDATALang%先获得文献类型
+\ifnum\theYYBib@BibLangLabel=1%中文
+    \printnames{author}%作者列表
+    \newunit\newblock
+    \printfield[YYBib@InproceedingsTitleFormat]{title}%文章名字
+    \newunit\newblock
+    \printnames{bookauthor}%论文集作者（可选）
+    \newunit\newblock
+    \printfield[YYBib@InpArtTitleFormat]{booktitle}%文集名字
+    \newunit\newblock
+    \printlist{location}%出版地
+    \printlist[YYBib@InproceedingsPublisherFormatCN]{publisher}%出版者
+    \printfield[YYBib@InproceedingsYear]{year}%出版年
+    \printfield[YYBib@Inproceedingspages]{pages}%页码
+\else%英文
+    \printnames[YYBib@NameENFormat:last-first]{author}%作者列表
+    \newunit\newblock
+    \printfield[YYBib@InproceedingsTitleFormat]{title}%文章名字
+    \newunit\newblock
+    \printnames[YYBib@NameENFormat:last-first]{bookauthor}%论文集作者（可选）
+    \newunit\newblock
+    \printfield[YYBib@InpArtTitleFormat]{booktitle}%文章名字
+    \newunit\newblock
+    \printlist{location}%出版地
+    \printlist[YYBib@InproceedingsPublisherFormatEN]{publisher}%出版者
+    \printfield[YYBib@InproceedingsYear]{year}%出版年
+    \printfield[YYBib@Inproceedingspages]{pages}%页码
+\fi%
+    \setcounter{YYBib@BibLangLabel}{0}%重置
+\finentry}
+%==========================================
+
+
+%++++++++++++++++++++++++++++++++++++++++++
+%七、专利：专利所有者. 专利名: 专利国别,
+%专利号[P]: 公告日期[应用日期]. 获取和访问路径.
+%------------------------------------------
+%各项格式定义
+%专利名
+\DeclareFieldFormat{YYBib@PatentTitleFormat}{#1}
+%专利国别
+\DeclareListFormat{YYBib@PatentCountryFormat}{: #1}
+%专利号
+\DeclareFieldFormat{YYBib@PatentNumberFormat}{, #1\text{[P]}}
+%公开日期
+\DeclareFieldFormat{YYBib@PatentPubDateFormat}{#1}
+%引用日期
+\DeclareFieldFormat{YYBib@PatentUseDateFormat}{[#1]}
+%访问路径
+\DeclareFieldFormat{YYBib@PatentUrlFormat}{\url{#1}}
+
+\DeclareFieldFormat{urldate}{#1}
+
+%引用日期有时候可选？
+\newcommand{\YYBib@printPatentURLdate}{%
+    \iffieldundef{urlyear}{}{%
+        \printtext{[}\printurldate\printtext{]}%
+    }%
+}
+
+\DeclareBibliographyDriver{patent}{%
+\YYBib@getDATALang%先获得文献类型
+\ifnum\theYYBib@BibLangLabel=1%中文
+    \printnames{author}%专利所有者
+    \newunit\newblock
+    \printfield[YYBib@PatentTitleFormat]{title}%专利名
+    \printlist[YYBib@PatentCountryFormat]{location}%专利国别
+    \printfield[YYBib@PatentNumberFormat]{number}%专利号
+    \newunit\newblock
+    \printdate%公开日期
+    \YYBib@printPatentURLdate%引用日期
+    \newunit\newblock
+    \printfield[YYBib@PatentUrlFormat]{url}%访问路径
+\else%英文
+    \printnames[YYBib@NameENFormat:last-first]{author}%专利所有者
+    \newunit\newblock
+    \printfield[YYBib@PatentTitleFormat]{title}%专利名
+    \printlist[YYBib@PatentCountryFormat]{location}%专利国别
+    \printfield[YYBib@PatentNumberFormat]{number}%专利号
+    \newunit\newblock
+    \printdate%公开日期
+    \YYBib@printPatentURLdate%引用日期
+    \newunit\newblock
+    \printfield[YYBib@PatentUrlFormat]{url}%访问路径
+\fi%
+    \setcounter{YYBib@BibLangLabel}{0}%重置
+\finentry}
+%==========================================
+
+
+
+%++++++++++++++++++++++++++++++++++++++++++
+%八、电子文献：主要责任者.电子文献题名[EB/OL].
+%电子文献的出版或获得地址，发表更新日期/引用日期.
+%------------------------------------------
+%各项格式定义
+%电子文献名
+\DeclareFieldFormat{YYBib@OnlineTitleFormat}{#1\text{[EB/OL]}}
+%电子文献获取路径
+\DeclareFieldFormat{YYBib@OnlineUrlFormat}{\url{#1}}
+
+%引用日期有时候可选？
+\newcommand{\YYBib@printOnlineURLdate}{%
+    \iffieldundef{urlyear}{}{%
+        \printtext{/}\printurldate%
+    }%
+}
+
+\DeclareBibliographyDriver{online}{%
+\YYBib@getDATALang%先获得文献类型
+\ifnum\theYYBib@BibLangLabel=1%中文
+    \printnames{author}
+    \newunit\newblock
+    \printfield[YYBib@OnlineTitleFormat]{title}
+    \newunit\newblock
+    \printfield[YYBib@OnlineUrlFormat]{url}%访问路径
+    \printtext{, }\printdate%发表更新日期
+    \YYBib@printOnlineURLdate%引用日期
+\else%英文
+    \printnames[YYBib@NameENFormat:last-first]{author}
+    \newunit\newblock
+    \printfield[YYBib@OnlineTitleFormat]{title}
+    \newunit\newblock
+    \printfield[YYBib@OnlineUrlFormat]{url}%访问路径
+    \printtext{, }\printdate%发表更新日期
+    \YYBib@printOnlineURLdate%引用日期
+\fi%
+    \setcounter{YYBib@BibLangLabel}{0}%重置
+\finentry}
+%==========================================
+
+
+
+
+%====================================================================
+
+\endinput
